@@ -2,6 +2,11 @@ package com.hower.hotel.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,9 +37,13 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.hower.hotel.utils.CsvImportUtil.getResource;
 
 @Api(tags = {"工作信息"})
 @RequestMapping(value = "/work")
@@ -154,20 +163,32 @@ public class WorkController extends SuperController {
 
     /**
      * 上传CSV文件
+     *
      * @param file
      * @throws IOException
      */
+    @RequestMapping("/importCsvFile")
     public void importCsvFile(@RequestParam MultipartFile file) throws IOException {
-        List<String> dataList = CsvImportUtil.importCsv(new File(file.getResource().getFile().getAbsoluteFile().getPath()));
-        List<String> dataList1 = CsvImportUtil.importCsv(new File(file.getOriginalFilename()));
-//        List<String> dataList= Demo.importCsv(new File("C:\\Users\\EDY\\Desktop\\aaa.csv"));
-        for (String string : dataList) {
-            System.out.println(string);
+        byte[] bate = file.getBytes();
+        List<Map<String, Object>> list = getResource(bate);
+        if (list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                if (i == 0) {
+                    continue;
+                }
+                //修改利润  支付状态
+                List<Work> workList = workService.list().stream().filter(y -> y.getContent().equalsIgnoreCase(list.get(i).get("content"))).collect(Collectors.toList());
+                if (CollUtil.isNotEmpty(workList)) {
+                    Work work = workList.get(0);
+                    if (new BigDecimal(list.get(i).get("profits").toString()).compareTo(work.getAllotPrice()) >= 0) {
+                        work.setProfits(new BigDecimal(list.get(i).get("profits").toString()).subtract(work.getPrice()));
+                        work.setPaymentStatus(1);
+                        workService.saveOrUpdate(work);
+                    }
+                }
+            }
         }
     }
-
-
-
 
     /**
      * 发邮件
