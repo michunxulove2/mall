@@ -17,6 +17,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class LoginController extends SuperController {
 
     @GetMapping("/current")
     @ApiOperation("当前登录的用户信息")
-    public StaffInfo current(String token){
+    public StaffInfo current(String token) {
         SysToken sysToken = sysTokenService.getOne(new QueryWrapper<SysToken>().eq(SysToken.TOKEN, token));
         return staffInfoService.getById(sysToken.getSId());
     }
@@ -41,7 +42,7 @@ public class LoginController extends SuperController {
     @ApiOperation("登录操作")
 //    @CrossOrigin
     public Map<String, Object> login(
-            @RequestBody  LoginParams loginParams
+            @RequestBody LoginParams loginParams, HttpSession session
     ) {
         System.out.println(loginParams);
         Map<String, Object> result = new HashMap<>();
@@ -57,16 +58,18 @@ public class LoginController extends SuperController {
             result = sysTokenService.createToken(staff.getId());
             result.put("status", 200);
             result.put("msg", "登陆成功");
+            session.setAttribute("token", result.get("token"));
         }
         return result;
     }
 
-//    @CrossOrigin
+    //    @CrossOrigin
     @PostMapping("/logout")
     @ApiOperation("用户退出操作")
-    public ApiResponses<Boolean> logout(){
+    public ApiResponses<Boolean> logout(HttpSession session) {
         StaffInfo staffInfo = (StaffInfo) SecurityUtils.getSubject().getPrincipal();
         sysTokenService.removeById(staffInfo.getId());
+        session.setAttribute("token", "");
         return success(true);
     }
 
@@ -77,7 +80,7 @@ public class LoginController extends SuperController {
     public ApiResponses<Boolean> postChangeWord(@RequestBody ChangePwdParams changePwdParams) {
         StaffInfo staffInfo = (StaffInfo) SecurityUtils.getSubject().getPrincipal();
         System.out.println(staffInfo);
-        if(staffInfo.getPassword().equals(changePwdParams.getOldPwd())){
+        if (staffInfo.getPassword().equals(changePwdParams.getOldPwd())) {
             staffInfo.setPassword(changePwdParams.getNewPwd());
             staffInfoService.updateById(staffInfo);
         }

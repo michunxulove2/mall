@@ -28,22 +28,34 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * <p>
  * 状态枚举
  * </p>
- *
- * 
  */
-public enum StatusEnum  {
+public enum StatusEnum {
 
-    NORMAL(0), DISABLE(1);
+    VOID(1,"VOID"), RSC(2,"RSC"), GENERAL(3,"GENERAL"), URS(4,"URS"),
+    URG(5,"URG"), PLANED(6,"PLANED");
 
-    @EnumValue
-    private final int value;
 
-    StatusEnum(final int value) {
+    private int value;
+
+    private String valueName;
+
+    StatusEnum(final int value, String valueName) {
         this.value = value;
+        this.valueName = valueName;
     }
 
     @JsonValue
     public int getValue() {
         return this.value;
     }
+    @JsonValue
+    public String getValueName() {
+        return valueName;
+    }
+
+    public void setValueName(String valueName) {
+        this.valueName = valueName;
+    }
+
+
 }

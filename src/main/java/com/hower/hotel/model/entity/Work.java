@@ -1,5 +1,6 @@
 package com.hower.hotel.model.entity;
 
+import cn.afterturn.easypoi.excel.annotation.Excel;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.hower.hotel.framework.model.convert.Convert;
@@ -32,10 +33,12 @@ public class Work extends Convert {
     /**
      * 代码
      */
+    @Excel(name = "工作代码")
     private String code;
     /**
      * 内容
      */
+    @Excel(name = "工作内容")
     private String content;
     /**
      * 地址
@@ -50,9 +53,9 @@ public class Work extends Convert {
      */
     private Integer status;
     /**
-     * 工作类型 1 已发放工作 2 紧急工作 3 已超完成时间工作 4 已完成工作 5 未申请工作
+     *
      */
-    private Integer type;
+    private String type;
     /**
      * 完成时间
      */
@@ -64,6 +67,7 @@ public class Work extends Convert {
     /**
      * 利润
      */
+    @Excel(name = "利润")
     private BigDecimal profits;
     /**
      * 创建时间
@@ -99,7 +103,6 @@ public class Work extends Convert {
     private Integer paymentStatus;
 
 
-
     public static final String ID = "id";
 
     public static final String CODE = "code";
@@ -114,21 +117,21 @@ public class Work extends Convert {
 
     public static final String TYPE = "type";
 
-    public static final String FINISHTIME = "finishTime";
+    public static final String FINISH_TIME = "finish_time";
 
     public static final String PRICE = "price";
 
     public static final String PROFITES = "profits";
 
-    public static final String CREATETIME = "createTime";
+    public static final String CREATE_TIME = "create_time";
 
-    public static final String USERID = "userId";
+    public static final String USER_ID = "user_id";
 
-    public static final String ALLOTID = "allotId";
+    public static final String ALLOT_ID = "allot_id";
 
-    public static final String ALLOTPRICE = "allotPrice";
+    public static final String ALLOT_PRICE = "allot_price";
 
-    public static final String PAYMENTSTATUS = "paymentStatus";
+    public static final String PAYMENT_STATUS = "payment_status";
 
 
 }
