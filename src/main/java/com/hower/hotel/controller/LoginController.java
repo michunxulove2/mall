@@ -77,14 +77,14 @@ public class LoginController extends SuperController {
 //    @CrossOrigin
     @PostMapping("/changePwd")
     @RequiresRoles({"admin"})
-    public ApiResponses<Boolean> postChangeWord(@RequestBody ChangePwdParams changePwdParams) {
+    public ApiResponses<Boolean> postChangeWord(@RequestBody ChangePwdParams changePwdParams, HttpSession session) {
         StaffInfo staffInfo = (StaffInfo) SecurityUtils.getSubject().getPrincipal();
         System.out.println(staffInfo);
         if (staffInfo.getPassword().equals(changePwdParams.getOldPwd())) {
             staffInfo.setPassword(changePwdParams.getNewPwd());
             staffInfoService.updateById(staffInfo);
         }
-        this.logout();
+        this.logout(session);
         return success(true);
     }
 }
