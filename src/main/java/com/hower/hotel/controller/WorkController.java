@@ -113,6 +113,38 @@ public class WorkController extends SuperController {
         return success(list);
     }
 
+
+    @GetMapping("/pageByType")
+    @ApiOperation("/工作进度页 分页查询")
+    public ApiResponses<IPage<Work>> getCustomerInfoList(
+            @RequestParam(defaultValue = "1", required = false) Integer current,
+            @RequestParam(defaultValue = "10", required = false) Integer pageSize, @RequestParam("type") Integer type) {
+        QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+        IPage<Work> list = null;
+        if (type == 1) {
+            workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
+            list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        } else if (type == 2) {
+            workQueryChainWrapper.notIn(Work.STATUS, 1, 4);
+            list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        } else if (type == 3) {
+            workQueryChainWrapper.apply("allot_finish_time < finish_time ");
+            list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        } else if (type == 4) {
+            workQueryChainWrapper.eq(Work.STATUS, 4);
+            list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        } else if (type == 5) {
+            workQueryChainWrapper.isNull(Work.ALLOT_ID);
+            list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        }
+        list.getRecords().forEach(bean -> {
+            StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
+            bean.setUserName(serviceById.getName());
+        });
+        return success(list);
+    }
+
+
     @GetMapping("/getUser")
     @ApiOperation("/分包商下拉")
     public ApiResponses<List<StaffInfo>> getUser() {
@@ -158,6 +190,7 @@ public class WorkController extends SuperController {
             StaffInfo userStaffInfo = staffInfoService.getById(workServiceById.getUserId());
             StaffInfo allotStaffInfo = staffInfoService.getById(workServiceById.getAllotId());
             sendEmail(allotStaffInfo.getEmail(), allotStaffInfo.getEmailPassword(), userStaffInfo.getEmail(), workServiceById.getContent(), 1);
+            work.setAllotFinishTime(LocalDateTime.now());
         }
         return success(workService.saveOrUpdate(work));
     }
@@ -388,7 +421,7 @@ public class WorkController extends SuperController {
 
         if (type == 1) {
             mimeMessage.setSubject("分包商完成确认");
-        }else {
+        } else {
             mimeMessage.setSubject("Admin下发工作");
         }
 

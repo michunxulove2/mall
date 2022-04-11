@@ -102,6 +102,8 @@ public class Work extends Convert {
      */
     private Integer paymentStatus;
 
+    private LocalDateTime allotFinishTime;
+
 
     public static final String ID = "id";
 
@@ -133,5 +135,5 @@ public class Work extends Convert {
 
     public static final String PAYMENT_STATUS = "payment_status";
 
-
+    public static final String ALLOT_FINISH_TIME = "allot_finish_time";
 }
