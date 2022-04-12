@@ -67,12 +67,60 @@ public class WorkController extends SuperController {
     @Autowired
     private StaffRoleServiceImpl staffRoleService;
 
-    @GetMapping("/page")
+//    @GetMapping("/page")
+//    @ApiOperation("/工作进度页 分页查询")
+//    public ApiResponses<IPage<Work>> getCustomerInfoList(
+//            @RequestParam(defaultValue = "1", required = false) Integer current,
+//            @RequestParam(defaultValue = "10", required = false) Integer pageSize,
+//            @RequestParam("type") String type,
+//            @RequestParam("address") String address,
+//            @RequestParam("phone") String phone,
+//            @RequestParam("status") Integer status,
+//            @RequestParam("isAdmin") Integer isAdmin, HttpServletRequest request) {
+//        QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+//        if (isAdmin.intValue() != 0) {
+//            String token = null;
+//            Cookie[] cookie = request.getCookies();
+//            for (int i = 0; i < cookie.length; i++) {
+//                Cookie cook = cookie[i];
+//                if (cook.getName().equalsIgnoreCase("token")) { //获取键
+//                    token = cook.getValue().toString();
+//                }
+//            }
+//            SysToken sysToken = sysTokenService.findByToken(token);
+//            if (ObjectUtil.isEmpty(sysToken)) {
+//                return failure(new Page<Work>());
+//            }
+//            workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
+//        }
+//        if (!(type).equals("null")) {
+//            workQueryChainWrapper.eq(Work.TYPE, type);
+//        }
+//        if (!address.equals("null")) {
+//            workQueryChainWrapper.like(Work.AADDRESS, address);
+//        }
+//        if (!phone.equals("null")) {
+//            workQueryChainWrapper.like(Work.PHONE, phone);
+//        }
+//        if (status != null) {
+//            workQueryChainWrapper.eq(Work.STATUS, status);
+//        }
+//        IPage<Work> list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+//        list.getRecords().forEach(bean -> {
+//            StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
+//            bean.setUserName(serviceById.getName());
+//        });
+//        return success(list);
+//    }
+
+
+    @GetMapping("/pageByType")
     @ApiOperation("/工作进度页 分页查询")
     public ApiResponses<IPage<Work>> getCustomerInfoList(
             @RequestParam(defaultValue = "1", required = false) Integer current,
             @RequestParam(defaultValue = "10", required = false) Integer pageSize,
-            @RequestParam("type") String type,
+            @RequestParam("type") Integer type,
+            @RequestParam("worktype") String worktype,
             @RequestParam("address") String address,
             @RequestParam("phone") String phone,
             @RequestParam("status") Integer status,
@@ -93,8 +141,8 @@ public class WorkController extends SuperController {
             }
             workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
         }
-        if (!(type).equals("null")) {
-            workQueryChainWrapper.eq(Work.TYPE, type);
+        if (!(worktype).equals("null")) {
+            workQueryChainWrapper.eq(Work.TYPE, worktype);
         }
         if (!address.equals("null")) {
             workQueryChainWrapper.like(Work.AADDRESS, address);
@@ -105,21 +153,6 @@ public class WorkController extends SuperController {
         if (status != null) {
             workQueryChainWrapper.eq(Work.STATUS, status);
         }
-        IPage<Work> list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
-        list.getRecords().forEach(bean -> {
-            StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
-            bean.setUserName(serviceById.getName());
-        });
-        return success(list);
-    }
-
-
-    @GetMapping("/pageByType")
-    @ApiOperation("/工作进度页 分页查询")
-    public ApiResponses<IPage<Work>> getCustomerInfoList(
-            @RequestParam(defaultValue = "1", required = false) Integer current,
-            @RequestParam(defaultValue = "10", required = false) Integer pageSize, @RequestParam("type") Integer type) {
-        QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
         IPage<Work> list = null;
         if (type == 1) {
             workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
