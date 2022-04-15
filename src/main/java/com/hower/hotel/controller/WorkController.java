@@ -176,9 +176,9 @@ public class WorkController extends SuperController {
                                         @RequestParam(defaultValue = "10", required = false) Integer pageSize, @RequestParam("type") Integer type,
              @RequestParam("worktype") String worktype,
              @RequestParam("address") String address,
-             @RequestParam("phone") String phone, HttpSession session){
+             @RequestParam("phone") String phone, HttpServletRequest request){
         QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
-            String token = session.getAttribute("token").toString();
+            String token =request.getHeader("token");
       IPage<Work> list = null;
             SysToken sysToken = sysTokenService.findByToken(token);
             if (ObjectUtil.isEmpty(sysToken)) {
@@ -240,9 +240,9 @@ public class WorkController extends SuperController {
     }
 
     @GetMapping("/count")
-    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList2(HttpSession session) {
+    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList2(HttpServletRequest request) {
         Map<Integer,Integer>map=new HashMap<>();
-            String token = session.getAttribute("token").toString();
+            String token =request.getHeader("token");
             SysToken sysToken = sysTokenService.findByToken(token);
             if (ObjectUtil.isEmpty(sysToken)) {
                 map.put(1,0);
@@ -291,7 +291,7 @@ public class WorkController extends SuperController {
     @CrossOrigin
     @PostMapping("/post")
     @ApiOperation("添加 或者 修改")
-    public ApiResponses<Boolean> postCustomerInfoByEntity(@RequestBody WorkDTO1 work1, HttpSession session) throws GeneralSecurityException, MessagingException {
+    public ApiResponses<Boolean> postCustomerInfoByEntity(@RequestBody WorkDTO1 work1, HttpServletRequest request) throws GeneralSecurityException, MessagingException {
         if (work1.getId() == null) {
             DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -304,7 +304,7 @@ public class WorkController extends SuperController {
             work.setPhone(work1.getPhone());
             work.setPrice(work1.getPrice());
             work.setType(work1.getType());
-            String token = session.getAttribute("token").toString();
+            String token =request.getHeader("token");
             if(token!=null){
                 SysToken sysToken = sysTokenService.findByToken(token);
                 StaffInfo staffInfo = staffInfoService.getById(sysToken.getSId());
@@ -338,9 +338,9 @@ public class WorkController extends SuperController {
     @CrossOrigin
     @PostMapping("/sure")
     @ApiOperation("/选择了分包商后确认 分包商id 工作id 分包商价格")
-    public ApiResponses<Boolean> sureByEntity(@RequestBody Work work, HttpSession session) {
+    public ApiResponses<Boolean> sureByEntity(@RequestBody Work work, HttpSession session,HttpServletRequest request) {
         if (BeanUtil.isNotEmpty(work.getId())) {
-            String token = session.getAttribute("token").toString();
+            String token =request.getHeader("token");
             SysToken sysToken = sysTokenService.findByToken(token);
             StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
             StaffInfo allotStaffInfo = staffInfoService.getById(work.getAllotId());
@@ -477,9 +477,9 @@ public class WorkController extends SuperController {
 
     @ApiOperation("完成项目报表")
     @GetMapping("/exportExcel")
-    public void exportExcel(HttpServletResponse response, HttpServletRequest request,HttpSession session) {
+    public void exportExcel(HttpServletResponse response, HttpServletRequest request) {
         // 模拟从数据库获取需要导出的数据
-        String token = session.getAttribute("token").toString();
+        String token =request.getHeader("token");
         SysToken sysToken = sysTokenService.findByToken(token);
         StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
         StaffRole roleServiceOne = staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid", userStaffInfo.getId()));
