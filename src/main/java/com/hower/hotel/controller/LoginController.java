@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,8 +48,8 @@ public class LoginController extends SuperController {
     @ApiOperation("登录操作")
 //    @CrossOrigin
     public Map<String, Object> login(
-            @RequestBody LoginParams loginParams, HttpSession session
-    ) {
+            @RequestBody LoginParams loginParams, HttpSession session, HttpServletResponse response
+            ) {
         System.out.println(loginParams);
         Map<String, Object> result = new HashMap<>();
         Integer username = loginParams.getUsername();
@@ -63,8 +64,9 @@ public class LoginController extends SuperController {
             result = sysTokenService.createToken(staff.getId());
             result.put("status", 200);
             result.put("msg", "登陆成功");
+            result.put("role",  staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid",staff.getId())).getRoleId().toString());
             session.setAttribute("token", result.get("token"));
-            session.setAttribute("role", staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid",staff.getId())));
+            response.setHeader("role", staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid",staff.getId())).getRoleId().toString());
         }
         return result;
     }
