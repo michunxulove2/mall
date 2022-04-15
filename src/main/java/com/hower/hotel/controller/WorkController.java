@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hower.hotel.common.responses.ApiResponses;
 import com.hower.hotel.framework.controller.SuperController;
 import com.hower.hotel.model.dto.WorkDTO;
+import com.hower.hotel.model.dto.WorkDTO1;
 import com.hower.hotel.model.entity.*;
 import com.hower.hotel.service.impl.StaffInfoServiceImpl;
 import com.hower.hotel.service.impl.StaffRoleServiceImpl;
@@ -159,7 +160,7 @@ public class WorkController extends SuperController {
             workQueryChainWrapper.in(Work.STATUS,1,2);
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 2) {
-            workQueryChainWrapper.notIn(Work.STATUS, 1, 4);
+            workQueryChainWrapper.notIn(Work.STATUS, 1,3, 4);
             workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
             workQueryChainWrapper.apply("now()-finish_time<=1000000");
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
@@ -181,35 +182,113 @@ public class WorkController extends SuperController {
         return success(list);
     }
 
+    @GetMapping("/yinbs/pageByType")
+    @ApiOperation("/工作进度页应包商 分页查询")
+  public   ApiResponses<IPage<Work>> aa(@RequestParam(defaultValue = "1", required = false) Integer current,
+                                        @RequestParam(defaultValue = "10", required = false) Integer pageSize, @RequestParam("type") Integer type,
+             @RequestParam("worktype") String worktype,
+             @RequestParam("address") String address,
+             @RequestParam("phone") String phone, HttpServletRequest request){
+        QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+            String token = null;
+            Cookie[] cookie = request.getCookies();
+            for (int i = 0; i < cookie.length; i++) {
+                Cookie cook = cookie[i];
+                if (cook.getName().equalsIgnoreCase("token")) { //获取键
+                    token = cook.getValue().toString();
+                }
+            }
+      IPage<Work> list = null;
+            SysToken sysToken = sysTokenService.findByToken(token);
+            if (ObjectUtil.isEmpty(sysToken)) {
+                return failure(new Page<Work>());
+            }
+            workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
+        if (!(worktype).equals("null")) {
+            workQueryChainWrapper.eq(Work.TYPE, worktype);
+        }
+        if (!address.equals("null")) {
+            workQueryChainWrapper.like(Work.AADDRESS, address);
+        }
+        if (!phone.equals("null")) {
+            workQueryChainWrapper.like(Work.PHONE, phone);
+        }
+            if(type==1){
+                workQueryChainWrapper.in(Work.STATUS,1,4);
+            }else if(type==2){
+                workQueryChainWrapper.eq(Work.STATUS,2);
+            }
+      list= workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+      list.getRecords().forEach(bean -> {
+          StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
+          bean.setUserName(serviceById.getName());
+      });
+      return success(list);
+    }
+
     @GetMapping("/typeCount")
     public ApiResponses<Map<Integer,Integer>> getCustomerInfoList1() {
         Map<Integer,Integer>map=new HashMap<>();
-        Integer [] arr={1,2,3,4,5};
-        Arrays.stream(arr).forEach(bean->{
-            Integer count=0;
-            QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
-            if (bean == 1) {
-                workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
-                workQueryChainWrapper.in(Work.STATUS,1,2);
-                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-            } else if (bean == 2) {
-                workQueryChainWrapper.notIn(Work.STATUS, 1, 4);
-                workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
-                workQueryChainWrapper.apply("now()-finish_time<=1000000");
-                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-            } else if (bean == 3) {
-                workQueryChainWrapper.in(Work.STATUS,2);
-                workQueryChainWrapper.apply("now() > finish_time ");
-                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-            } else if (bean == 4) {
-                workQueryChainWrapper.eq(Work.STATUS, 4);
-                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-            } else if (bean == 5) {
-                workQueryChainWrapper.isNull(Work.ALLOT_ID);
-                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            Integer [] arr={1,2,3,4,5,6};
+            Arrays.stream(arr).forEach(bean->{
+                Integer count=0;
+                QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+                if (bean == 1) {
+                    workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
+                    workQueryChainWrapper.in(Work.STATUS,1,2);
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                } else if (bean == 2) {
+                    workQueryChainWrapper.notIn(Work.STATUS, 1,3, 4);
+                    workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
+                    workQueryChainWrapper.apply("now()-finish_time<=1000000");
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                } else if (bean == 3) {
+                    workQueryChainWrapper.in(Work.STATUS,2);
+                    workQueryChainWrapper.apply("now() > finish_time ");
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                } else if (bean == 4) {
+                    workQueryChainWrapper.eq(Work.STATUS, 4);
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                } else if (bean == 5) {
+                    workQueryChainWrapper.isNull(Work.ALLOT_ID);
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                }
+                map.put(bean,count);
+            });
+        return success(map);
+    }
+
+    @GetMapping("/count")
+    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList2(HttpServletRequest request) {
+        Map<Integer,Integer>map=new HashMap<>();
+            String token = null;
+            Cookie[] cookie = request.getCookies();
+            for (int i = 0; i < cookie.length; i++) {
+                Cookie cook = cookie[i];
+                if (cook.getName().equalsIgnoreCase("token")) { //获取键
+                    token = cook.getValue().toString();
+                }
             }
-            map.put(bean,count);
-        });
+            SysToken sysToken = sysTokenService.findByToken(token);
+            if (ObjectUtil.isEmpty(sysToken)) {
+                map.put(1,0);
+                map.put(2,0);
+                return success(map);
+            }
+            Integer [] arr={1,2};
+            Arrays.stream(arr).forEach(bean->{
+                Integer count=0;
+                QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+                workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
+                if (bean == 1) {
+                    workQueryChainWrapper.in(Work.STATUS,1,4);
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                } else if (bean == 2) {
+                    workQueryChainWrapper.notIn(Work.STATUS, 2);
+                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+                }
+                map.put(bean,count);
+            });
         return success(map);
     }
 
@@ -238,8 +317,19 @@ public class WorkController extends SuperController {
     @CrossOrigin
     @PostMapping("/post")
     @ApiOperation("添加 或者 修改")
-    public ApiResponses<Boolean> postCustomerInfoByEntity(@RequestBody Work work, HttpServletRequest request) throws GeneralSecurityException, MessagingException {
-        if (work.getId() == null) {
+    public ApiResponses<Boolean> postCustomerInfoByEntity(@RequestBody WorkDTO1 work1, HttpServletRequest request) throws GeneralSecurityException, MessagingException {
+        if (work1.getId() == null) {
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            Work work = new Work();
+            work.setAddress(work1.getAddress());
+            work.setCode(work1.getCode());
+            work.setContent(work1.getContent());
+            LocalDateTime ldt = LocalDateTime.parse(work1.getFinishTime(),df);
+            work.setFinishTime(ldt);
+            work.setPhone(work1.getPhone());
+            work.setPrice(work1.getPrice());
+            work.setType(work1.getType());
             String token = null;
             Cookie[] cookie = request.getCookies();
             for (int i = 0; i < cookie.length; i++) {
@@ -248,18 +338,27 @@ public class WorkController extends SuperController {
                     token = cook.getValue().toString();
                 }
             }
-            SysToken sysToken = sysTokenService.findByToken(token);
-            StaffInfo staffInfo = staffInfoService.getById(sysToken.getSId());
-            work.setUserId(staffInfo.getId());
-            work.setUserName(staffInfo.getName());
+            if(token!=null){
+                SysToken sysToken = sysTokenService.findByToken(token);
+                StaffInfo staffInfo = staffInfoService.getById(sysToken.getSId());
+                work.setUserId(staffInfo.getId());
+                work.setUserName(staffInfo.getName());
+            }
+            work.setCreateTime(LocalDateTime.now());
+            work.setPaymentStatus(2);
+            work.setStatus(3);
+            return success(workService.saveOrUpdate(work));
         }
-        if (work.getStatus() == 1) {//分包商确认发邮箱
-            Work workServiceById = workService.getById(work.getId());
+        if (work1.getStatus() == 1) {//分包商确认发邮箱
+            Work work = new Work();
+            Work workServiceById = workService.getById(work1.getId());
             StaffInfo userStaffInfo = staffInfoService.getById(workServiceById.getUserId());
             StaffInfo allotStaffInfo = staffInfoService.getById(workServiceById.getAllotId());
             sendEmail(allotStaffInfo.getEmail(), allotStaffInfo.getEmailPassword(), userStaffInfo.getEmail(), workServiceById.getContent(), 1);
             work.setAllotFinishTime(LocalDateTime.now());
+            return success(workService.saveOrUpdate(work));
         }
+        Work work = BeanUtil.copyProperties(work1, Work.class);
         return success(workService.saveOrUpdate(work));
     }
 
