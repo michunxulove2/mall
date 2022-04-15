@@ -123,7 +123,7 @@ public class WorkController extends SuperController {
             @RequestParam("worktype") String worktype,
             @RequestParam("address") String address,
             @RequestParam("phone") String phone,
-            @RequestParam("status") Integer status,
+            @RequestParam("status") String status,
             @RequestParam("isAdmin") Integer isAdmin, HttpServletRequest request) {
         QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
         if (isAdmin.intValue() != 0) {
@@ -150,18 +150,22 @@ public class WorkController extends SuperController {
         if (!phone.equals("null")) {
             workQueryChainWrapper.like(Work.PHONE, phone);
         }
-        if (status != null) {
+        if (!status.equals("null")) {
             workQueryChainWrapper.eq(Work.STATUS, status);
         }
         IPage<Work> list = null;
         if (type == 1) {
             workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
+            workQueryChainWrapper.in(Work.STATUS,1,2);
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 2) {
             workQueryChainWrapper.notIn(Work.STATUS, 1, 4);
+            workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
+            workQueryChainWrapper.apply("now()-finish_time<=1000000");
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 3) {
-            workQueryChainWrapper.apply("allot_finish_time < finish_time ");
+            workQueryChainWrapper.in(Work.STATUS,2);
+            workQueryChainWrapper.apply("now() > finish_time ");
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 4) {
             workQueryChainWrapper.eq(Work.STATUS, 4);
@@ -177,6 +181,37 @@ public class WorkController extends SuperController {
         return success(list);
     }
 
+    @GetMapping("/typeCount")
+    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList1() {
+        Map<Integer,Integer>map=new HashMap<>();
+        Integer [] arr={1,2,3,4,5};
+        Arrays.stream(arr).forEach(bean->{
+            Integer count=0;
+            QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+            if (bean == 1) {
+                workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
+                workQueryChainWrapper.in(Work.STATUS,1,2);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 2) {
+                workQueryChainWrapper.notIn(Work.STATUS, 1, 4);
+                workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
+                workQueryChainWrapper.apply("now()-finish_time<=1000000");
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 3) {
+                workQueryChainWrapper.in(Work.STATUS,2);
+                workQueryChainWrapper.apply("now() > finish_time ");
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 4) {
+                workQueryChainWrapper.eq(Work.STATUS, 4);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 5) {
+                workQueryChainWrapper.isNull(Work.ALLOT_ID);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            }
+            map.put(bean,count);
+        });
+        return success(map);
+    }
 
     @GetMapping("/getUser")
     @ApiOperation("/分包商下拉")

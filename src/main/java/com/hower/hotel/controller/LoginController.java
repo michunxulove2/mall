@@ -5,15 +5,18 @@ import com.hower.hotel.common.responses.ApiResponses;
 import com.hower.hotel.framework.controller.SuperController;
 import com.hower.hotel.model.dto.StaffInfoDTO;
 import com.hower.hotel.model.entity.StaffInfo;
+import com.hower.hotel.model.entity.StaffRole;
 import com.hower.hotel.model.entity.SysToken;
 import com.hower.hotel.model.parm.ChangePwdParams;
 import com.hower.hotel.model.parm.LoginParams;
 import com.hower.hotel.service.impl.StaffInfoServiceImpl;
+import com.hower.hotel.service.impl.StaffRoleServiceImpl;
 import com.hower.hotel.service.impl.SysTokenServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -30,6 +33,8 @@ public class LoginController extends SuperController {
     private StaffInfoServiceImpl staffInfoService;
     @Resource
     private SysTokenServiceImpl sysTokenService;
+    @Autowired
+    private StaffRoleServiceImpl staffRoleService;
 
     @GetMapping("/current")
     @ApiOperation("当前登录的用户信息")
@@ -59,6 +64,7 @@ public class LoginController extends SuperController {
             result.put("status", 200);
             result.put("msg", "登陆成功");
             session.setAttribute("token", result.get("token"));
+            session.setAttribute("role", staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid",staff.getId())));
         }
         return result;
     }
