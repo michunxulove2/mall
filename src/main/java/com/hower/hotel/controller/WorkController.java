@@ -145,15 +145,15 @@ public class WorkController extends SuperController {
         IPage<Work> list = null;
         if (type == 1) {
             workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
-            workQueryChainWrapper.in(Work.STATUS,1,2);
+            workQueryChainWrapper.in(Work.STATUS, 1, 2);
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 2) {
-            workQueryChainWrapper.notIn(Work.STATUS, 1,3, 4);
+            workQueryChainWrapper.notIn(Work.STATUS, 1, 3, 4);
             workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
             workQueryChainWrapper.apply("now()-finish_time<=1000000");
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 3) {
-            workQueryChainWrapper.in(Work.STATUS,2);
+            workQueryChainWrapper.in(Work.STATUS, 2);
             workQueryChainWrapper.apply("now() > finish_time ");
             list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
         } else if (type == 4) {
@@ -172,19 +172,19 @@ public class WorkController extends SuperController {
 
     @GetMapping("/yinbs/pageByType")
     @ApiOperation("/工作进度页应包商 分页查询")
-  public   ApiResponses<IPage<Work>> aa(@RequestParam(defaultValue = "1", required = false) Integer current,
+    public ApiResponses<IPage<Work>> aa(@RequestParam(defaultValue = "1", required = false) Integer current,
                                         @RequestParam(defaultValue = "10", required = false) Integer pageSize, @RequestParam("type") Integer type,
-             @RequestParam("worktype") String worktype,
-             @RequestParam("address") String address,
-             @RequestParam("phone") String phone, HttpServletRequest request){
+                                        @RequestParam("worktype") String worktype,
+                                        @RequestParam("address") String address,
+                                        @RequestParam("phone") String phone, HttpServletRequest request) {
         QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
-            String token =request.getHeader("token");
-      IPage<Work> list = null;
-            SysToken sysToken = sysTokenService.findByToken(token);
-            if (ObjectUtil.isEmpty(sysToken)) {
-                return failure(new Page<Work>());
-            }
-            workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
+        String token = request.getHeader("token");
+        IPage<Work> list = null;
+        SysToken sysToken = sysTokenService.findByToken(token);
+        if (ObjectUtil.isEmpty(sysToken)) {
+            return failure(new Page<Work>());
+        }
+        workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
         if (!(worktype).equals("null")) {
             workQueryChainWrapper.eq(Work.TYPE, worktype);
         }
@@ -194,75 +194,75 @@ public class WorkController extends SuperController {
         if (!phone.equals("null")) {
             workQueryChainWrapper.like(Work.PHONE, phone);
         }
-            if(type==1){
-                workQueryChainWrapper.in(Work.STATUS,1,4);
-            }else if(type==2){
-                workQueryChainWrapper.eq(Work.STATUS,2);
-            }
-      list= workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
-      list.getRecords().forEach(bean -> {
-          StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
-          bean.setUserName(serviceById.getName());
-      });
-      return success(list);
+        if (type == 1) {
+            workQueryChainWrapper.in(Work.STATUS, 1, 4);
+        } else if (type == 2) {
+            workQueryChainWrapper.eq(Work.STATUS, 2);
+        }
+        list = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).page(new Page<Work>(current, pageSize, true));
+        list.getRecords().forEach(bean -> {
+            StaffInfo serviceById = staffInfoService.getById(bean.getUserId());
+            bean.setUserName(serviceById.getName());
+        });
+        return success(list);
     }
 
     @GetMapping("/typeCount")
-    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList1() {
-        Map<Integer,Integer>map=new HashMap<>();
-            Integer [] arr={1,2,3,4,5,6};
-            Arrays.stream(arr).forEach(bean->{
-                Integer count=0;
-                QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
-                if (bean == 1) {
-                    workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
-                    workQueryChainWrapper.in(Work.STATUS,1,2);
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                } else if (bean == 2) {
-                    workQueryChainWrapper.notIn(Work.STATUS, 1,3, 4);
-                    workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
-                    workQueryChainWrapper.apply("now()-finish_time<=1000000");
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                } else if (bean == 3) {
-                    workQueryChainWrapper.in(Work.STATUS,2);
-                    workQueryChainWrapper.apply("now() > finish_time ");
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                } else if (bean == 4) {
-                    workQueryChainWrapper.eq(Work.STATUS, 4);
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                } else if (bean == 5) {
-                    workQueryChainWrapper.isNull(Work.ALLOT_ID);
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                }
-                map.put(bean,count);
-            });
+    public ApiResponses<Map<Integer, Integer>> getCustomerInfoList1() {
+        Map<Integer, Integer> map = new HashMap<>();
+        Integer[] arr = {1, 2, 3, 4, 5, 6};
+        Arrays.stream(arr).forEach(bean -> {
+            Integer count = 0;
+            QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+            if (bean == 1) {
+                workQueryChainWrapper.isNotNull(Work.ALLOT_ID);
+                workQueryChainWrapper.in(Work.STATUS, 1, 2);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 2) {
+                workQueryChainWrapper.notIn(Work.STATUS, 1, 3, 4);
+                workQueryChainWrapper.isNull(Work.ALLOT_FINISH_TIME);
+                workQueryChainWrapper.apply("now()-finish_time<=1000000");
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 3) {
+                workQueryChainWrapper.in(Work.STATUS, 2);
+                workQueryChainWrapper.apply("now() > finish_time ");
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 4) {
+                workQueryChainWrapper.eq(Work.STATUS, 4);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 5) {
+                workQueryChainWrapper.isNull(Work.ALLOT_ID);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            }
+            map.put(bean, count);
+        });
         return success(map);
     }
 
     @GetMapping("/count")
-    public ApiResponses<Map<Integer,Integer>> getCustomerInfoList2(HttpServletRequest request) {
-        Map<Integer,Integer>map=new HashMap<>();
-            String token =request.getHeader("token");
-            SysToken sysToken = sysTokenService.findByToken(token);
-            if (ObjectUtil.isEmpty(sysToken)) {
-                map.put(1,0);
-                map.put(2,0);
-                return success(map);
+    public ApiResponses<Map<Integer, Integer>> getCustomerInfoList2(HttpServletRequest request) {
+        Map<Integer, Integer> map = new HashMap<>();
+        String token = request.getHeader("token");
+        SysToken sysToken = sysTokenService.findByToken(token);
+        if (ObjectUtil.isEmpty(sysToken)) {
+            map.put(1, 0);
+            map.put(2, 0);
+            return success(map);
+        }
+        Integer[] arr = {1, 2};
+        Arrays.stream(arr).forEach(bean -> {
+            Integer count = 0;
+            QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
+            workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
+            if (bean == 1) {
+                workQueryChainWrapper.in(Work.STATUS, 1, 4);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
+            } else if (bean == 2) {
+                workQueryChainWrapper.notIn(Work.STATUS, 2);
+                count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
             }
-            Integer [] arr={1,2};
-            Arrays.stream(arr).forEach(bean->{
-                Integer count=0;
-                QueryChainWrapper<Work> workQueryChainWrapper = workService.query();
-                workQueryChainWrapper.eq(Work.ALLOT_ID, sysToken.getSId());
-                if (bean == 1) {
-                    workQueryChainWrapper.in(Work.STATUS,1,4);
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                } else if (bean == 2) {
-                    workQueryChainWrapper.notIn(Work.STATUS, 2);
-                    count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
-                }
-                map.put(bean,count);
-            });
+            map.put(bean, count);
+        });
         return success(map);
     }
 
@@ -293,19 +293,22 @@ public class WorkController extends SuperController {
     @ApiOperation("添加 或者 修改")
     public ApiResponses<Boolean> postCustomerInfoByEntity(@RequestBody WorkDTO1 work1, HttpServletRequest request) throws GeneralSecurityException, MessagingException {
         if (work1.getId() == null) {
+            Map<String, Work> workMap = workService.list().stream().collect(Collectors.toMap(i -> i.getCode(), y -> y));
             DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+            if (workMap.get(work1.getCode()) != null) {
+                return failure(false);
+            }
             Work work = new Work();
             work.setAddress(work1.getAddress());
             work.setCode(work1.getCode());
             work.setContent(work1.getContent());
-            LocalDateTime ldt = LocalDateTime.parse(work1.getFinishTime(),df);
+            LocalDateTime ldt = LocalDateTime.parse(work1.getFinishTime(), df);
             work.setFinishTime(ldt);
             work.setPhone(work1.getPhone());
             work.setPrice(work1.getPrice());
             work.setType(work1.getType());
-            String token =request.getHeader("token");
-            if(token!=null){
+            String token = request.getHeader("token");
+            if (token != null) {
                 SysToken sysToken = sysTokenService.findByToken(token);
                 StaffInfo staffInfo = staffInfoService.getById(sysToken.getSId());
                 work.setUserId(staffInfo.getId());
@@ -338,9 +341,9 @@ public class WorkController extends SuperController {
     @CrossOrigin
     @PostMapping("/sure")
     @ApiOperation("/选择了分包商后确认 分包商id 工作id 分包商价格")
-    public ApiResponses<Boolean> sureByEntity(@RequestBody Work work, HttpSession session,HttpServletRequest request) {
+    public ApiResponses<Boolean> sureByEntity(@RequestBody Work work, HttpSession session, HttpServletRequest request) {
         if (BeanUtil.isNotEmpty(work.getId())) {
-            String token =request.getHeader("token");
+            String token = request.getHeader("token");
             SysToken sysToken = sysTokenService.findByToken(token);
             StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
             StaffInfo allotStaffInfo = staffInfoService.getById(work.getAllotId());
@@ -371,7 +374,7 @@ public class WorkController extends SuperController {
      */
     @ApiOperation("admin上传csv 修改工作代码对应的 分包商支付价格 与状态 利润")
     @PostMapping("/importCsvFile")
-    public ApiResponses<Boolean> importCsvFile(@RequestParam MultipartFile file) throws IOException {
+    public ApiResponses<String> importCsvFile(@RequestParam MultipartFile file) throws IOException {
         byte[] bate = file.getBytes();
 
         List<Map<String, Object>> list = getResource(bate);
@@ -386,54 +389,71 @@ public class WorkController extends SuperController {
                 if (CollUtil.isNotEmpty(workList)) {
                     Work work = workList.get(0);
                     if (new BigDecimal(list.get(i).get("profits").toString()).compareTo(work.getAllotPrice()) >= 0) {
-                        work.setProfits(new BigDecimal(list.get(i).get("profits").toString()).subtract(work.getPrice()));
+                        work.setProfits(work.getPrice().subtract(new BigDecimal(list.get(i).get("profits").toString())));
                         work.setPaymentStatus(1);
                         workService.saveOrUpdate(work);
                     }
+                } else {
+                    return failure("失败，未找到工作代码：" + list.get(i).get("content"));
                 }
             }
-            return success(true);
+            return success("成功");
         }
-        return success(false);
+        return success("成功");
     }
 
     @ApiOperation("admin上传execl 新增工作")
     @RequestMapping(value = "/importData", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
-    public ApiResponses<Boolean> importData(HttpServletRequest request, @RequestPart(value = "file") MultipartFile file) {
-        return success(importExcel(file));
+    public ApiResponses<String> importData(HttpServletRequest request, @RequestPart(value = "file") MultipartFile file) {
+        String token = request.getHeader("token");
+        return success(importExcel(file, token));
     }
 
-    public Boolean importExcel(MultipartFile file) {
-
-        StaffInfo serviceById = staffInfoService.getById(10000);
+    public String importExcel(MultipartFile file, String token) {
+        Map<String, Work> workMap = workService.list().stream().collect(Collectors.toMap(i -> i.getCode(), y -> y));
+        SysToken sysToken = sysTokenService.findByToken(token);
+        StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
         try {
             InputStream inputStream = file.getInputStream();
             List list = ExcelUtil.readExcel(inputStream, file.getOriginalFilename());
+            List<Work> workList = Lists.newArrayListWithCapacity(list.size());
             inputStream.close();
+            int z = 0;
+            StringBuffer sb = new StringBuffer();
             for (int i = 0; i < list.size(); i++) {
                 Work work = new Work();
                 work.setCode(((ArrayList) list.get(i)).get(0).toString());
+                if (workMap.get(work.getCode()) != null) {
+                    z++;
+                    sb.append(work.getCode()).append(" ");
+                }
                 work.setContent(((ArrayList) list.get(i)).get(1).toString());
                 work.setType(((ArrayList) list.get(i)).get(2).toString());
                 work.setAddress(((ArrayList) list.get(i)).get(3).toString());
                 LocalDateTime finishTIme = LocalDateTime.parse(((ArrayList) list.get(i)).get(4).toString(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 work.setFinishTime(finishTIme);
-                work.setPrice(new BigDecimal(((ArrayList) list.get(i)).get(5).toString()));
+                work.setPhone(((ArrayList) list.get(i)).get(5).toString());
+                work.setPrice(new BigDecimal(((ArrayList) list.get(i)).get(6).toString()));
                 work.setCreateTime(LocalDateTime.now());
+                work.setUserId(userStaffInfo.getId());
+                work.setUserName(userStaffInfo.getName());
+                work.setPaymentStatus(2);
                 work.setStatus(3);
-                work.setPhone(serviceById.getContact());
-                work.setUserId(serviceById.getId());
-                work.setUserName(serviceById.getName());
-                workService.save(work);
+                workList.add(work);
             }
-            return true;
+            if (z == 0) {
+                workService.saveBatch(workList, 10);
+            } else {
+                return "已存在工作代码:" + sb.toString();
+            }
+            return "成功";
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return "失败";
     }
 
 
@@ -479,7 +499,7 @@ public class WorkController extends SuperController {
     @GetMapping("/exportExcel")
     public void exportExcel(HttpServletResponse response, HttpServletRequest request) {
         // 模拟从数据库获取需要导出的数据
-        String token =request.getHeader("token");
+        String token = request.getHeader("token");
         SysToken sysToken = sysTokenService.findByToken(token);
         StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
         StaffRole roleServiceOne = staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid", userStaffInfo.getId()));
