@@ -386,7 +386,7 @@ public class WorkController extends SuperController {
             for (int i = 0; i < list.size(); i++) {
                 Work work = workMap.get(((ArrayList) list.get(i)).get(0).toString().split("\\.")[0]);
                 if (work != null) {
-                    work.setProfits(work.getPrice().subtract(new BigDecimal(((ArrayList) list.get(i)).get(1).toString())));
+                    work.setProfits(new BigDecimal(((ArrayList) list.get(i)).get(1).toString()).subtract(work.getProfits()));
                     work.setPaymentStatus(1);
                     workService.saveOrUpdate(work);
                 } else {
