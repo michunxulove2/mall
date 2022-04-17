@@ -258,7 +258,7 @@ public class WorkController extends SuperController {
                 workQueryChainWrapper.in(Work.STATUS, 1, 4);
                 count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
             } else if (bean == 2) {
-                workQueryChainWrapper.notIn(Work.STATUS, 2);
+                workQueryChainWrapper.eq(Work.STATUS, 2);
                 count = workQueryChainWrapper.orderByDesc(Work.CREATE_TIME).list().size();
             }
             map.put(bean, count);
@@ -325,6 +325,8 @@ public class WorkController extends SuperController {
             StaffInfo userStaffInfo = staffInfoService.getById(workServiceById.getUserId());
             StaffInfo allotStaffInfo = staffInfoService.getById(workServiceById.getAllotId());
             sendEmail(allotStaffInfo.getEmail(), allotStaffInfo.getEmailPassword(), userStaffInfo.getEmail(), workServiceById.getContent(), 1);
+            work.setId(work1.getId());
+            work.setStatus(work1.getStatus());
             work.setAllotFinishTime(LocalDateTime.now());
             return success(workService.saveOrUpdate(work));
         }
@@ -375,38 +377,38 @@ public class WorkController extends SuperController {
     @ApiOperation("admin上传csv 修改工作代码对应的 分包商支付价格 与状态 利润")
     @PostMapping("/importCsvFile")
     public ApiResponses<String> importCsvFile(@RequestParam MultipartFile file) throws IOException {
-        byte[] bate = file.getBytes();
-
-        List<Map<String, Object>> list = getResource(bate);
-        if (list != null) {
+        Map<String, Work> workMap = workService.list().stream().collect(Collectors.toMap(i -> i.getCode(), y -> y));
+        try {
+            InputStream inputStream = file.getInputStream();
+            List list = ExcelUtil.readExcel(inputStream, file.getOriginalFilename());
+            inputStream.close();
+            StringBuffer sb = new StringBuffer();
             for (int i = 0; i < list.size(); i++) {
-                if (i == 0) {
-                    continue;
-                }
-                //修改利润  支付状态
-                int finalI = i;
-                List<Work> workList = workService.list().stream().filter(y -> y.getCode().equalsIgnoreCase(list.get(finalI).get("content").toString())).collect(Collectors.toList());
-                if (CollUtil.isNotEmpty(workList)) {
-                    Work work = workList.get(0);
-                    if (new BigDecimal(list.get(i).get("profits").toString()).compareTo(work.getAllotPrice()) >= 0) {
-                        work.setProfits(work.getPrice().subtract(new BigDecimal(list.get(i).get("profits").toString())));
-                        work.setPaymentStatus(1);
-                        workService.saveOrUpdate(work);
-                    }
+                Work work = workMap.get(((ArrayList) list.get(i)).get(0).toString().split("\\.")[0]);
+                if (work != null) {
+                    work.setProfits(work.getPrice().subtract(new BigDecimal(((ArrayList) list.get(i)).get(1).toString())));
+                    work.setPaymentStatus(1);
+                    workService.saveOrUpdate(work);
                 } else {
-                    return failure("失败，未找到工作代码：" + list.get(i).get("content"));
+                    sb.append(((ArrayList) list.get(i)).get(0).toString()).append(",");
                 }
             }
+            if (sb.length() > 0) {
+                return failure("失败，未找到工作代码：" + sb.toString());
+            }
             return success("成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return success("成功");
+        return failure("失败");
     }
 
     @ApiOperation("admin上传execl 新增工作")
     @RequestMapping(value = "/importData", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
-    public ApiResponses<String> importData(HttpServletRequest request, @RequestPart(value = "file") MultipartFile file) {
-        String token = request.getHeader("token");
+    public ApiResponses<String> importData(@RequestParam(value = "token") String token, @RequestParam(value = "file") MultipartFile file) {
         return success(importExcel(file, token));
     }
 
@@ -423,7 +425,7 @@ public class WorkController extends SuperController {
             StringBuffer sb = new StringBuffer();
             for (int i = 0; i < list.size(); i++) {
                 Work work = new Work();
-                work.setCode(((ArrayList) list.get(i)).get(0).toString());
+                work.setCode(((ArrayList) list.get(i)).get(0).toString().split("\\.")[0]);
                 if (workMap.get(work.getCode()) != null) {
                     z++;
                     sb.append(work.getCode()).append(" ");
@@ -497,9 +499,8 @@ public class WorkController extends SuperController {
 
     @ApiOperation("完成项目报表")
     @GetMapping("/exportExcel")
-    public void exportExcel(HttpServletResponse response, HttpServletRequest request) {
+    public void exportExcel(HttpServletResponse response, HttpServletRequest request, @RequestParam("token") String token) {
         // 模拟从数据库获取需要导出的数据
-        String token = request.getHeader("token");
         SysToken sysToken = sysTokenService.findByToken(token);
         StaffInfo userStaffInfo = staffInfoService.getById(sysToken.getSId());
         StaffRole roleServiceOne = staffRoleService.getOne(new QueryWrapper<StaffRole>().eq("uid", userStaffInfo.getId()));
